@@ -19,12 +19,25 @@ namespace GestionPuntosGApi.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ObtenerPuntoGeo([FromQuery] string? tipo, [FromQuery] double? latitud, [FromQuery] double? longitud, [FromQuery] double? radioKm)
         {
             try
             {
                 var puntos = await _bll.ObtenerPuntoGeo(tipo, latitud, longitud, radioKm);
-                return Ok(puntos);
+
+                if (puntos != null)
+                {
+                    return Ok(puntos);
+                }
+                else
+                {
+                    return NotFound();
+                }
+                
             }
             catch (Exception ex)
             {
@@ -33,6 +46,10 @@ namespace GestionPuntosGApi.Controllers
         }
 
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ObtenerPuntoGeoPorId(string id)
         {
             try
@@ -42,7 +59,7 @@ namespace GestionPuntosGApi.Controllers
                 if (punto == null)
                     return NotFound();
 
-                return StatusCode(StatusCodes.Status200OK, punto);
+                return Ok(punto);
             }
             catch(Exception ex)
             {
@@ -51,10 +68,24 @@ namespace GestionPuntosGApi.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CrearPuntoGeo([FromBody] PuntoGeo puntoGeo)
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new
+                    {
+                        status = 400,
+                        title = "Errores de validación",
+                        data = ModelState
+                    });
+                }
+
                 var punto = new PuntoGeo
                 {
                     Latitud = puntoGeo.Latitud,
@@ -75,10 +106,25 @@ namespace GestionPuntosGApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ActualizarPuntoGeo(string id, [FromBody] PuntoGeo puntoGeo, [FromHeader] string usuarioId)
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new
+                    {
+                        status = 400,
+                        title = "Errores de validación",
+                        data = ModelState
+                    });
+                }
+
                 var actualizado = await _bll.ActualizarPuntoGeo(id, puntoGeo, usuarioId);
                 
                 if (!actualizado)
@@ -92,8 +138,12 @@ namespace GestionPuntosGApi.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> EliminarPuntoGeo(string id, [FromHeader] string usuarioId)
+        [HttpDelete]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> EliminarPuntoGeo([FromQuery] string id, [FromQuery] string usuarioId)
         {
             try
             {

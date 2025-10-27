@@ -99,6 +99,16 @@ builder.Services.AddScoped<BllUsuario>();
 builder.Services.AddScoped<BllPuntoGeo>();
 builder.Services.AddScoped<TokenJwt>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -110,6 +120,8 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseCors("PermitirFrontend");
 
 app.UseHttpsRedirection();
 
